@@ -1,59 +1,65 @@
-import { Component } from 'react';
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import { useState } from "react";
+import { Notify } from "notiflix/build/notiflix-notify-aio";
 
-import Statistics from './Statistics/Statistics';
-import FeedbackOptions from './FeedbackOptions/FeedbackOptions';
-import Section from './Section/Section';
-import Notification from './Notification/Notification';
+import Statistics from "./Statistics/Statistics";
+import FeedbackOptions from "./FeedbackOptions/FeedbackOptions";
+import Section from "./Section/Section";
+import Notification from "./Notification/Notification";
 
-export default class App extends Component {
-  state = {
-    good: 0,
-    neutral: 0,
-    bad: 0,
-  };
+const feedbackTitles = ["good", "neutral", "bad"];
 
-  countTotalFeedback = () => {
-    return Object.values(this.state).reduce((acc, value) => acc + value, 0);
-  };
+export default function App() {
+	const [good, setGood] = useState(0);
+	const [neutral, setNeutral] = useState(0);
+	const [bad, setBad] = useState(0);
 
-  countPositiveFeedbackPercentage = () => {
-    const FeedbackPercentage =
-      (this.state.good / this.countTotalFeedback()) * 100;
-    return Math.round(FeedbackPercentage);
-  };
+	const countTotalFeedback = () => {
+		return good + neutral + bad;
+	};
 
-  onControlClick = title => {
-    Notify.info('Thank for your feedback!');
-    this.setState(prevState => {
-      return {
-        [title]: prevState[title] + 1,
-      };
-    });
-  };
+	const countPositiveFeedbackPercentage = () => {
+		const FeedbackPercentage = (good / countTotalFeedback()) * 100;
+		return Math.round(FeedbackPercentage);
+	};
 
-  render() {
-    return (
-      <>
-        <Section title="Please leave feedback">
-          <FeedbackOptions
-            options={Object.keys(this.state)}
-            onLeaveFeedback={this.onControlClick}
-          />
+	const onControlClick = title => {
+		Notify.info("Thank for your feedback!");
 
-          {this.countTotalFeedback() ? (
-            <Statistics
-              good={this.state.good}
-              neutral={this.state.neutral}
-              bad={this.state.bad}
-              total={this.countTotalFeedback()}
-              positivePercentage={this.countPositiveFeedbackPercentage()}
-            />
-          ) : (
-            <Notification message="There is no feedback!" />
-          )}
-        </Section>
-      </>
-    );
-  }
+		switch (title) {
+			case "good":
+				setGood(prev => prev + 1);
+				break;
+
+			case "neutral":
+				setNeutral(prev => prev + 1);
+				break;
+
+			case "bad":
+				setBad(prev => prev + 1);
+				break;
+
+			default:
+				Notify.failure("This type of feedback not availeble!");
+		}
+	};
+
+	return (
+		<>
+			<Section title="Please leave feedback">
+				<FeedbackOptions options={feedbackTitles} onLeaveFeedback={onControlClick} />
+
+				{countTotalFeedback() ? (
+					<Statistics
+						good={good}
+						neutral={neutral}
+						bad={bad}
+						total={countTotalFeedback()}
+						positivePercentage={countPositiveFeedbackPercentage()}
+					/>
+				) : (
+					<Notification message="There is no feedback!" />
+				)}
+			</Section>
+		</>
+	);
 }
